@@ -1,0 +1,31 @@
+name: Sync upstream hbb_common
+
+# 每周自动把上游 rustdesk/hbb_common 的更新合并进 fork main，
+# R远程 的服务器预设提交保留在最上层。
+on:
+  schedule:
+    - cron: "0 14 * * 0" # 每周日 14:00 UTC（在 rustdesk 同步之前）
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Merge upstream
+        run: |
+          git config user.name "rremote-sync-bot"
+          git config user.email "rremote-sync-bot@users.noreply.github.com"
+          git remote add upstream https://github.com/rustdesk/hbb_common.git
+          git fetch upstream main
+          git merge --no-edit upstream/main
+
+      - name: Push
+        run: git push origin main
